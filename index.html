@@ -1,0 +1,114 @@
+// Base de dados com o seu exemplo exato
+const initialData = [
+    {
+        id: "quarto",
+        title: "🛏️ Quarto",
+        colorClass: "progress-pink", // Barra Rosa
+        subtasks: [
+            { id: "q1", text: "Arrumar a cama.", completed: false },
+            { id: "q2", text: "Guardar as roupas espalhadas.", completed: false },
+            { id: "q3", text: "Limpar as mesas de cabeceira.", completed: false },
+            { id: "q4", text: "Passar pano nos móveis.", completed: false },
+            { id: "q5", text: "Aspirar ou varrer o chão.", completed: false },
+            { id: "q6", text: "Trocar a roupa de cama.", completed: false }
+        ]
+    },
+    {
+        id: "sala",
+        title: "🛋️ Sala",
+        colorClass: "progress-yellow", // Barra Amarela
+        subtasks: [
+            { id: "s1", text: "Organizar as almofadas e mantas.", completed: false },
+            { id: "s2", text: "Limpar o rack e a televisão.", completed: false },
+            { id: "s3", text: "Tirar o pó dos objetos decorativos.", completed: false },
+            { id: "s4", text: "Limpar a mesa de centro.", completed: false },
+            { id: "s5", text: "Aspirar o sofá e o tapete.", completed: false },
+            { id: "s6", text: "Passar pano no piso.", completed: false }
+        ]
+    },
+    {
+        id: "cozinha",
+        title: "🍳 Cozinha",
+        colorClass: "progress-pink", // Alternando para Rosa
+        subtasks: [
+            { id: "c1", text: "Lavar e guardar a louça.", completed: false },
+            { id: "c2", text: "Limpar e higienizar a pia.", completed: false },
+            { id: "c3", text: "Passar pano no fogão.", completed: false },
+            { id: "c4", text: "Limpar o exterior dos eletrodomésticos.", completed: false },
+            { id: "c5", text: "Limpar a mesa de jantar.", completed: false },
+            { id: "c6", text: "Retirar o lixo orgânico e reciclável.", completed: false },
+            { id: "c7", text: "Varrer e passar pano no chão.", completed: false }
+        ]
+    }
+];
+
+// Carrega os dados salvos localmente ou inicia com os padrões acima
+let appData = JSON.parse(localStorage.getItem('domestics_tasks_data')) || initialData;
+const appContainer = document.getElementById('todo-app');
+
+function saveData() {
+    localStorage.setItem('domestics_tasks_data', JSON.stringify(appData));
+}
+
+function calculateProgress(subtasks) {
+    if (subtasks.length === 0) return 0;
+    const completedCount = subtasks.filter(t => t.completed).length;
+    return Math.round((completedCount / subtasks.length) * 100);
+}
+
+function renderApp() {
+    appContainer.innerHTML = '';
+
+    appData.forEach((group) => {
+        const progress = calculateProgress(group.subtasks);
+
+        const groupEl = document.createElement('section');
+        groupEl.className = 'task-group';
+
+        groupEl.innerHTML = `
+            <h2 class="group-title">${group.title}</h2>
+            
+            <div class="progress-container">
+                <div class="progress-bar ${group.colorClass}" style="width: ${progress}%"></div>
+            </div>
+            <div class="progress-text">${progress}% concluído</div>
+
+            <ul class="subtasks-list">
+                ${group.subtasks.map(subtask => `
+                    <li class="subtask-item">
+                        <input 
+                            type="checkbox" 
+                            id="${subtask.id}" 
+                            ${subtask.completed ? 'checked' : ''}
+                            data-group-id="${group.id}"
+                            data-subtask-id="${subtask.id}"
+                        >
+                        <label for="${subtask.id}">${subtask.text}</label>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+
+        appContainer.appendChild(groupEl);
+    });
+
+    // Adiciona escuta de cliques nas caixas de seleção
+    const checkboxes = appContainer.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const groupId = e.target.getAttribute('data-group-id');
+            const subtaskId = e.target.getAttribute('data-subtask-id');
+            
+            const group = appData.find(g => g.id === groupId);
+            const subtask = group.subtasks.find(s => s.id === subtaskId);
+            subtask.completed = e.target.checked;
+
+            saveData();
+            renderApp(); // Recarrega a tela com as porcentagens atualizadas
+        });
+    });
+}
+
+// Inicializa o app ao abrir a página
+renderApp();
+              
